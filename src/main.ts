@@ -22,20 +22,24 @@ namespace Settings {
         // move all data into the array before saving to disk.
         // WHEN LOADING PLEASE DO NOT ORDER THIS ANY DIFFERENT.
         // 4 bytes for volumes.
+        // 4(3) for [score, accuracy, u.name_len, u.name]
+
+        // #VOLUME
+        // a byte for each volume knob
         U8[0] = values.volume.master
         U8[1] = values.volume.sfx
         U8[2] = values.volume.music
         U8[3] = values.volume.background
 
-        // PROFILE
+        // #PROFILE
         const U32 = new Uint32Array(data);
         U32[1] = values.user.score;
 
         const F32 = new Float32Array(data);
         F32[2] = values.user.accuracy;
         
-        U8[12] = values.user.name.length;
-        for (let i = 0; i < values.user.name.length; i++) {
+        U8[12] = Math.min(values.user.name.length, 255);
+        for (let i = 0; i < U8[12]; i++) {
             U8[13+i] = values.user.name.charCodeAt(i);
         }
 
@@ -58,7 +62,7 @@ namespace Settings {
         })
 
 
-        // first 4 bytes for the volumes
+        // first 4 bytes for the volumes (32 BITS)
         values.volume.master = U8[0];
         values.volume.sfx = U8[1];
         values.volume.music = U8[2];
@@ -75,6 +79,8 @@ namespace Settings {
         for (let i = 0; i < U8[12]; i++) {
             values.user.name += String.fromCharCode(U8[13+i])
         }
+
+        console.log(`username: ${values.user.name} (${U8[12]})`)
     }
 
     export function getValues()
@@ -82,6 +88,55 @@ namespace Settings {
         return values;
     }
 
+    export function toString()
+    {
+        return String.fromCodePoint(...U8);
+    }
+
+    export function setName()
+    {
+        const a = prompt("Username:");
+        if(!a || a.length > 255) return new Error("Could not set username.");
+        for (let i = 0; i < a.length; i++) {
+            const char = a.charCodeAt(i);
+            if(
+                // make sure the character is within the normal ASCII thingy
+                (char < "0".charCodeAt(0) || char > "9".charCodeAt(0)) &&
+                ( char < "A".charCodeAt(0) || char > "Z".charCodeAt(0)) &&
+                ( char < "a".charCodeAt(0) || char > "z".charCodeAt(0))
+            )
+            {
+                return new Error("Could not set username.");
+            }
+        }
+        values.user.name = a;
+        console.log('name set to ' + a);
+        write();
+    }
+
     // load when the user loads the document
     document.addEventListener('DOMContentLoaded', load);
+}
+
+namespace Gamestate {
+
+    export function export_data()
+    {
+        const data: string[] = [];
+        // sum other things like the game's current state and whats next in the queue, advancements, achievements idk vro you make it up.
+        data.push(Settings.toString());
+        // data.push(Settings.toString())
+        download(data.flat(1).join(''), 'gamestate.dat');
+    }
+
+    export function download(fileData: string, fileName: string)
+    {
+        const e = document.createElement('a');
+        e.setAttribute('href', `data:text/plain;charset=utf-8,${fileData}`);
+        e.setAttribute('download', fileName);
+        e.style.display = 'none';
+        document.body.appendChild(e);
+        e.click();
+        e.remove();
+    }
 }
