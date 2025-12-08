@@ -1,6 +1,6 @@
 namespace Settings {
     const IDENTITY = 'rhythm/settings';
-    let data = new ArrayBuffer(4 * 64); // alloc(4 * 3 = 12 bytes)
+    let data = new ArrayBuffer(4 * 3 + 256);
     const U8 = new Uint8Array(data);
 
     const values = {
@@ -95,7 +95,7 @@ namespace Settings {
 
     export function setName()
     {
-        const a = prompt("Username:");
+        const a = prompt("Enter a memorable username.");
         if(!a || a.length > 255) return new Error("Could not set username.");
         for (let i = 0; i < a.length; i++) {
             const char = a.charCodeAt(i);

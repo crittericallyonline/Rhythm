@@ -2,7 +2,7 @@
 var Settings;
 (function (Settings) {
     const IDENTITY = 'rhythm/settings';
-    let data = new ArrayBuffer(4 * 64);
+    let data = new ArrayBuffer(4 * 3 + 256);
     const U8 = new Uint8Array(data);
     const values = {
         volume: {
@@ -67,7 +67,7 @@ var Settings;
     }
     Settings.toString = toString;
     function setName() {
-        const a = prompt("Username:");
+        const a = prompt("Enter a memorable username.");
         if (!a || a.length > 255)
             return new Error("Could not set username.");
         for (let i = 0; i < a.length; i++) {
